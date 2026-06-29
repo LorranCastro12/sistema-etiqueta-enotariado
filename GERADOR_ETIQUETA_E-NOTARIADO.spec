@@ -6,6 +6,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('LOGO E-NOTARIADO.png', '.'),
+        ('ICONE.ico', '.'),
     ],
     hiddenimports=[
         'qrcode',
@@ -46,4 +47,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='ICONE.ico',
 )

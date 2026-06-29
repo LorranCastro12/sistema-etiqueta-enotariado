@@ -23,6 +23,24 @@ TEXT_H = 3.5 * cm
 MARGIN_X = (LABEL_W - TEXT_W) / 2
 MARGIN_Y = (LABEL_H - TEXT_H) / 2
 
+# ---------------------------------------------------------------------------
+# UI Design Tokens
+# ---------------------------------------------------------------------------
+CLR_BG          = "#F4F6F9"
+CLR_SURFACE     = "#FFFFFF"
+CLR_BORDER      = "#D1D9E6"
+CLR_PRIMARY     = "#1B4F9E"
+CLR_PRIMARY_HOV = "#163F82"
+CLR_SECONDARY   = "#E8EDF5"
+CLR_LABEL       = "#4A5568"
+CLR_WARN        = "#C05000"
+CLR_ERROR       = "#C0392B"
+
+FONT_FAMILY = "Segoe UI"
+FONT_NORMAL = (FONT_FAMILY, 9)
+FONT_BOLD   = (FONT_FAMILY, 9, "bold")
+FONT_SMALL  = (FONT_FAMILY, 8)
+
 try:
     import qrcode as qrlib
     QR_AVAILABLE = True
@@ -163,8 +181,8 @@ class EtiquetaApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Gerador de Etiquetas E-notariado")
-        self.root.geometry("740x710")
-        self.root.minsize(640, 580)
+        self.root.geometry("760x860")
+        self.root.minsize(660, 760)
         self.root.resizable(True, True)
 
         logo_file = resource_path("LOGO E-NOTARIADO.png")
@@ -179,6 +197,7 @@ class EtiquetaApp:
         self.hora_var   = tk.StringVar(value=datetime.now().strftime("%H:%M"))
 
         self._preview_job = None
+        self._apply_style()
         for v in (self.codigo_var, self.mne_var, self.cpf_var,
                   self.nome_var, self.data_var, self.hora_var):
             v.trace_add("write", self._schedule_preview)
@@ -187,18 +206,101 @@ class EtiquetaApp:
         self.update_printer_list()
         self.update_preview()
 
+    def _apply_style(self):
+        style = ttk.Style(self.root)
+        style.theme_use("clam")
+
+        self.root.configure(bg=CLR_BG)
+
+        style.configure(".", background=CLR_BG, foreground="#2D3748",
+                        font=FONT_NORMAL, relief="flat", borderwidth=0)
+
+        style.configure("TFrame", background=CLR_BG)
+
+        style.configure("TLabel", background=CLR_BG, foreground="#2D3748", font=FONT_NORMAL)
+
+        style.configure("TEntry",
+                        fieldbackground=CLR_SURFACE, background=CLR_SURFACE,
+                        foreground="#1A202C", insertcolor="#1A202C",
+                        relief="flat", borderwidth=1,
+                        bordercolor=CLR_BORDER, font=FONT_NORMAL, padding=(6, 4))
+        style.map("TEntry",
+                  bordercolor=[("focus", CLR_PRIMARY)],
+                  fieldbackground=[("disabled", "#ECEFF1")])
+
+        style.configure("TCombobox",
+                        fieldbackground=CLR_SURFACE, background=CLR_SURFACE,
+                        foreground="#1A202C", relief="flat", borderwidth=1,
+                        bordercolor=CLR_BORDER, arrowcolor=CLR_PRIMARY,
+                        font=FONT_NORMAL, padding=(6, 4))
+        style.map("TCombobox",
+                  bordercolor=[("focus", CLR_PRIMARY)],
+                  fieldbackground=[("readonly", CLR_SURFACE)])
+
+        style.configure("Primary.TButton",
+                        background=CLR_PRIMARY, foreground="#FFFFFF",
+                        font=FONT_BOLD, relief="flat", borderwidth=0,
+                        padding=(16, 8), anchor="center")
+        style.map("Primary.TButton",
+                  background=[("active", CLR_PRIMARY_HOV), ("pressed", CLR_PRIMARY_HOV),
+                               ("disabled", "#90A4AE")],
+                  foreground=[("disabled", "#ECEFF1")],
+                  relief=[("pressed", "flat")])
+
+        style.configure("Secondary.TButton",
+                        background=CLR_SECONDARY, foreground=CLR_PRIMARY,
+                        font=FONT_BOLD, relief="flat", borderwidth=1,
+                        bordercolor=CLR_BORDER, padding=(16, 8), anchor="center")
+        style.map("Secondary.TButton",
+                  background=[("active", "#D5E0F0"), ("pressed", "#C8D5EA")],
+                  bordercolor=[("active", CLR_PRIMARY)])
+
+        style.configure("TLabelframe",
+                        background=CLR_SURFACE, relief="flat",
+                        borderwidth=1, bordercolor=CLR_BORDER)
+        style.configure("TLabelframe.Label",
+                        background=CLR_SURFACE, foreground=CLR_PRIMARY, font=FONT_BOLD)
+
     def _schedule_preview(self, *_):
         if self._preview_job:
             self.root.after_cancel(self._preview_job)
         self._preview_job = self.root.after(350, self.update_preview)
 
     def _build_ui(self):
-        main = ttk.Frame(self.root, padding=12)
+        main = ttk.Frame(self.root)
         main.pack(fill=tk.BOTH, expand=True)
 
+        # --- Header ---
+        header = tk.Frame(main, bg=CLR_PRIMARY, height=56)
+        header.pack(fill=tk.X, side=tk.TOP)
+        header.pack_propagate(False)
+
+        hbox = tk.Frame(header, bg=CLR_PRIMARY)
+        hbox.pack(side=tk.LEFT, padx=20, fill=tk.Y, pady=8)
+        tk.Label(hbox, text="Gerador de Etiquetas",
+                 bg=CLR_PRIMARY, fg="#FFFFFF",
+                 font=(FONT_FAMILY, 13, "bold"), anchor="w").pack(anchor="w")
+        tk.Label(hbox, text="e-Notariado  ·  Sistema ONR",
+                 bg=CLR_PRIMARY, fg="#A8C4E8",
+                 font=FONT_SMALL, anchor="w").pack(anchor="w")
+
+        # --- Área de conteúdo ---
+        content = ttk.Frame(main, padding=(16, 12))
+        content.pack(fill=tk.BOTH, expand=True)
+
+        def make_card(parent, title):
+            outer = tk.Frame(parent, bg=CLR_SURFACE,
+                             highlightbackground=CLR_BORDER, highlightthickness=1)
+            outer.pack(fill=tk.X, pady=(0, 10))
+            tk.Label(outer, text=title, bg=CLR_SURFACE, fg=CLR_PRIMARY,
+                     font=FONT_BOLD, anchor="w").pack(fill=tk.X, padx=14, pady=(10, 6))
+            tk.Frame(outer, bg=CLR_BORDER, height=1).pack(fill=tk.X, padx=14)
+            inner = tk.Frame(outer, bg=CLR_SURFACE)
+            inner.pack(fill=tk.X, padx=14, pady=10)
+            return inner
+
         # --- Formulário ---
-        form = ttk.LabelFrame(main, text="Dados da Etiqueta", padding=10)
-        form.pack(fill=tk.X, padx=4, pady=4)
+        form = make_card(content, "Dados da Etiqueta")
         form.columnconfigure(1, weight=1)
         form.columnconfigure(3, weight=2)
 
@@ -208,42 +310,57 @@ class EtiquetaApp:
             ("Data (dd/mm/aaaa):",    self.data_var,  "Horário (hh:mm):",  self.hora_var),
         ]
         for r, (l1, v1, l2, v2) in enumerate(fields):
-            ttk.Label(form, text=l1).grid(row=r, column=0, sticky=tk.W, padx=5, pady=4)
-            ttk.Entry(form, textvariable=v1).grid(row=r, column=1, sticky=tk.EW, padx=5, pady=4)
-            ttk.Label(form, text=l2).grid(row=r, column=2, sticky=tk.W, padx=5, pady=4)
-            ttk.Entry(form, textvariable=v2).grid(row=r, column=3, sticky=tk.EW, padx=5, pady=4)
+            tk.Label(form, text=l1, bg=CLR_SURFACE, fg=CLR_LABEL,
+                     font=FONT_NORMAL, anchor="w").grid(
+                row=r, column=0, sticky=tk.W, padx=(0, 8), pady=5)
+            ttk.Entry(form, textvariable=v1).grid(
+                row=r, column=1, sticky=tk.EW, padx=(0, 16), pady=5)
+            tk.Label(form, text=l2, bg=CLR_SURFACE, fg=CLR_LABEL,
+                     font=FONT_NORMAL, anchor="w").grid(
+                row=r, column=2, sticky=tk.W, padx=(0, 8), pady=5)
+            ttk.Entry(form, textvariable=v2).grid(
+                row=r, column=3, sticky=tk.EW, pady=5)
 
         warn_row = 3
         if not QR_AVAILABLE:
-            ttk.Label(form,
-                      text="Aviso: instale 'qrcode[pil]' para gerar QR Code automático  (pip install qrcode[pil])",
-                      foreground="#b06000").grid(row=warn_row, column=0, columnspan=4, sticky=tk.W, padx=5, pady=2)
+            tk.Label(form,
+                     text="Aviso: instale 'qrcode[pil]' para QR Code automático  (pip install qrcode[pil])",
+                     bg=CLR_SURFACE, fg=CLR_WARN, font=FONT_SMALL, anchor="w").grid(
+                row=warn_row, column=0, columnspan=4, sticky=tk.W, pady=(4, 0))
             warn_row += 1
         if not self.logo_path:
-            ttk.Label(form,
-                      text="Aviso: 'LOGO E-NOTARIADO.png' não encontrado — coloque-o na mesma pasta do programa",
-                      foreground="red").grid(row=warn_row, column=0, columnspan=4, sticky=tk.W, padx=5, pady=2)
+            tk.Label(form,
+                     text="Aviso: 'LOGO E-NOTARIADO.png' não encontrado — coloque-o na mesma pasta do programa",
+                     bg=CLR_SURFACE, fg=CLR_ERROR, font=FONT_SMALL, anchor="w").grid(
+                row=warn_row, column=0, columnspan=4, sticky=tk.W, pady=(4, 0))
 
         # --- Preview ---
-        prev_lf = ttk.LabelFrame(main, text="Pré-visualização da etiqueta (9,0 × 5,8 cm)", padding=8)
-        prev_lf.pack(fill=tk.X, padx=4, pady=4)
-
-        self.canvas = tk.Canvas(prev_lf, width=self.PREV_W, height=self.PREV_H,
-                                bg="white", bd=1, relief=tk.SOLID)
+        prev_body = make_card(content, "Pré-visualização da etiqueta  (9,0 × 5,8 cm)")
+        self.canvas = tk.Canvas(prev_body, width=self.PREV_W, height=self.PREV_H,
+                                bg="white", highlightthickness=1,
+                                highlightbackground=CLR_BORDER)
         self.canvas.pack()
 
         # --- Impressão ---
-        pf = ttk.LabelFrame(main, text="Impressão", padding=8)
-        pf.pack(fill=tk.X, padx=4, pady=4)
-        ttk.Label(pf, text="Impressora:").grid(row=0, column=0, padx=5, pady=4, sticky=tk.W)
+        pf = make_card(content, "Impressão")
+        pf.columnconfigure(1, weight=1)
+        tk.Label(pf, text="Impressora:", bg=CLR_SURFACE, fg=CLR_LABEL,
+                 font=FONT_NORMAL).grid(row=0, column=0, sticky=tk.W, padx=(0, 10), pady=5)
         self.printer_combo = ttk.Combobox(pf, width=52, state="readonly")
-        self.printer_combo.grid(row=0, column=1, padx=5, pady=4, sticky=tk.W)
+        self.printer_combo.grid(row=0, column=1, sticky=tk.EW, pady=5)
 
         # --- Botões ---
-        bf = ttk.Frame(main)
-        bf.pack(fill=tk.X, padx=4, pady=8)
-        ttk.Button(bf, text="Salvar PDF", command=self.save_label).pack(side=tk.LEFT, padx=4)
-        ttk.Button(bf, text="Imprimir Etiqueta", command=self.print_label).pack(side=tk.RIGHT, padx=4)
+        bf = ttk.Frame(content)
+        bf.pack(fill=tk.X, pady=(4, 0))
+        ttk.Button(bf, text="Salvar PDF",
+                   style="Secondary.TButton",
+                   command=self.save_label).pack(side=tk.LEFT)
+        ttk.Button(bf, text="  Limpar  ",
+                   style="Secondary.TButton",
+                   command=self._clear_fields).pack(side=tk.RIGHT, padx=(6, 0))
+        ttk.Button(bf, text="  Imprimir Etiqueta  ",
+                   style="Primary.TButton",
+                   command=self.print_label).pack(side=tk.RIGHT)
 
     def update_printer_list(self):
         printers = get_printers()
@@ -552,6 +669,14 @@ class EtiquetaApp:
     # Salvar / Imprimir
     # -----------------------------------------------------------------------
 
+    def _clear_fields(self):
+        self.codigo_var.set("")
+        self.mne_var.set("")
+        self.cpf_var.set("")
+        self.nome_var.set("")
+        self.data_var.set(datetime.now().strftime("%d/%m/%Y"))
+        self.hora_var.set(datetime.now().strftime("%H:%M"))
+
     def save_label(self):
         if not self.validate_inputs():
             return
@@ -596,6 +721,10 @@ class EtiquetaApp:
 
 def main():
     root = tk.Tk()
+    try:
+        root.iconbitmap(resource_path("ICONE.ico"))
+    except Exception:
+        pass
     EtiquetaApp(root)
     root.mainloop()
 
