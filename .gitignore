@@ -1,0 +1,21 @@
+# Build artifacts
+dist/
+build/
+*.spec.bak
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Documents with personal data
+modelo de referencia/
+
+# Claude Code internals
+.claude/
+
+# OS artifacts
+Thumbs.db
+desktop.ini
+.DS_Store
