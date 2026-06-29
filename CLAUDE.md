@@ -82,7 +82,44 @@ Comportamento crítico de ajuste de nome: se `CPF | NOME em DATA HORA` não coub
 
 ## PyInstaller (.spec)
 
-O `LOGO E-NOTARIADO.png` e o `ICONE.ico` são embutidos no .exe via `datas` no `.spec` — **não precisam** ser distribuídos junto com o executável. O ícone também é declarado em `icon='ICONE.ico'` no bloco `EXE(...)`, o que faz o Windows exibir o ícone correto no `.exe` e na barra de tarefas. O `qrcode` é declarado em `hiddenimports` porque o PyInstaller não o detecta automaticamente. `console=False` é obrigatório para evitar janela de terminal.
+O `LOGO E-NOTARIADO.png` e o `ICONE.ico` são embutidos no .exe via `datas` no `.spec` — **não precisam** ser distribuídos junto com o executável. O ícone também é declarado em `icon='ICONE.ico'` no bloco `EXE(...)`, o que faz o Windows exibir o ícone correto no `.exe` e na barra de tarefas. `console=False` é obrigatório para evitar janela de terminal.
+
+**qrcode:** usa `collect_all('qrcode')` no spec (não apenas `hiddenimports`) para garantir que todos os submodules — incluindo `qrcode.image.pil`, `qrcode.image.styles.*` etc. — sejam coletados. Só listar em `hiddenimports` não é suficiente para qrcode 8.x.
+
+**pywin32 (win32print / win32api):** o PyInstaller **não detecta automaticamente** as DLLs `pywintypes310.dll` e `pythoncom310.dll`, que ficam em `Lib\site-packages\pywin32_system32\` — fora do caminho normal de busca. Sem elas, o `import win32print` falha silenciosamente dentro do .exe mesmo com o módulo listado em `hiddenimports`. A correção é incluí-las explicitamente via `binaries` no spec:
+
+```python
+import glob, os
+_p310 = r'C:\Users\lorran.lima\AppData\Local\Programs\Python\Python310\Lib\site-packages\pywin32_system32'
+_pywin32_dlls = [(dll, '.') for dll in glob.glob(os.path.join(_p310, '*.dll'))]
+
+a = Analysis(..., binaries=qrcode_binaries + _pywin32_dlls, ...)
+```
+
+**Atenção ao ambiente Python:** há dois Pythons instalados — Python 3.14 (`C:\Python314\python.exe`, padrão no PATH) e Python 3.10 (`AppData\Local\Programs\Python\Python310\`). O `pyinstaller` no PATH pertence ao Python 3.10. As dependências **devem ser instaladas no Python 3.10** para serem bundled corretamente:
+
+```bash
+C:\Users\lorran.lima\AppData\Local\Programs\Python\Python310\python.exe -m pip install "qrcode[pil]" pywin32 Pillow reportlab
+```
+
+## Instalador Windows (Inno Setup)
+
+O arquivo `INSTALADOR.iss` gera o instalador "next, next" via **Inno Setup 6** (instalado em `%LOCALAPPDATA%\Programs\Inno Setup 6\`). O release v1.0 está publicado em https://github.com/LorranCastro12/sistema-etiqueta-enotariado/releases/tag/v1.0.
+
+Para gerar um novo instalador após recompilar o .exe:
+
+```bash
+# 1. Recompilar o .exe
+pyinstaller "GERADOR_ETIQUETA_E-NOTARIADO.spec" --noconfirm
+
+# 2. Gerar o instalador (saída: dist\Instalador_Etiqueta_E-Notariado_v1.0.exe)
+"%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe" INSTALADOR.iss
+
+# 3. Publicar no GitHub (substituindo o asset existente)
+gh release upload v1.0 "dist\Instalador_Etiqueta_E-Notariado_v1.0.exe" --repo LorranCastro12/sistema-etiqueta-enotariado --clobber
+```
+
+O instalador configura: pasta em `Arquivos de Programas\Etiqueta E-Notariado`, atalho no Menu Iniciar, opção de atalho na Área de Trabalho (desmarcada por padrão), e desinstalador registrado em "Programas e Recursos".
 
 ## Tamanhos de fonte no PDF
 
