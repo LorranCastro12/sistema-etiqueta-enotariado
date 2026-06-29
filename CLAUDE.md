@@ -62,8 +62,8 @@ O `LOGO E-NOTARIADO.png` é embutido no .exe via `datas` no `.spec` — **não p
 |---|---|---|
 | "Manifesto de assinatura" | Helvetica-Bold | 8 pt |
 | "CÓDIGO DE VALIDAÇÃO" | Helvetica-Bold | 6,5 pt |
-| Valor do código | Helvetica | 7,5 pt |
-| MNE e corpo | Helvetica | 7,0 pt |
+| Valor do código | Helvetica | 9,5 pt |
+| MNE e corpo | Helvetica | 9,0 pt |
 | "Para verificar..." + URL | Helvetica | 6,5 pt |
 | Espaçamento entre linhas | — | 3,1 mm |
 

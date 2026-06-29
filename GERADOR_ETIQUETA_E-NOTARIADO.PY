@@ -43,25 +43,25 @@ def resource_path(filename):
     return os.path.join(base, filename)
 
 
-def make_qr_pil(size_px):
+def make_qr_pil(size_px, url):
     """Gera QR Code como imagem PIL."""
     if not QR_AVAILABLE:
         return None
     qr = qrlib.QRCode(version=1, box_size=4, border=1,
                       error_correction=qrlib.constants.ERROR_CORRECT_M)
-    qr.add_data(VALIDATION_URL)
+    qr.add_data(url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
     return img.resize((size_px, size_px), Image.LANCZOS)
 
 
-def make_qr_buffer():
+def make_qr_buffer(url):
     """Gera QR Code como buffer de bytes (para ReportLab)."""
     if not QR_AVAILABLE:
         return None
     qr = qrlib.QRCode(version=1, box_size=10, border=1,
                       error_correction=qrlib.constants.ERROR_CORRECT_M)
-    qr.add_data(VALIDATION_URL)
+    qr.add_data(url)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     buf = io.BytesIO()
@@ -280,7 +280,8 @@ class EtiquetaApp:
 
     def generate_pdf(self, output_path):
         d = self._data()
-        qr_buf = make_qr_buffer()
+        qr_url = f"{VALIDATION_URL}/{d['codigo']}"
+        qr_buf = make_qr_buffer(qr_url)
 
         c = rl_canvas.Canvas(output_path, pagesize=(LABEL_W, LABEL_H))
 
@@ -292,7 +293,7 @@ class EtiquetaApp:
         y_top = MARGIN_Y + TEXT_H  # topo da área útil (ReportLab: y=0 embaixo)
 
         LOGO_SZ = 1.15 * cm
-        QR_SZ   = 1.15 * cm
+        QR_SZ   = 1.5 * cm
         LINE_H  = 3.1 * mm
 
         # Logo (canto superior esquerdo da área útil)
@@ -330,7 +331,7 @@ class EtiquetaApp:
         c.drawString(title_x, y_top - 11.0 * mm, d['codigo'])
 
         # Linha divisória abaixo do cabeçalho
-        div_y = y_top - LOGO_SZ - 1.5 * mm
+        div_y = y_top - max(LOGO_SZ, QR_SZ) - 1.5 * mm
         c.setStrokeColorRGB(0.78, 0.78, 0.78)
         c.setLineWidth(0.4)
         c.line(x0, div_y, x0 + TEXT_W, div_y)
@@ -405,6 +406,7 @@ class EtiquetaApp:
         self._preview_job = None
         self.canvas.delete("all")
         d = self._data()
+        qr_url = f"{VALIDATION_URL}/{d['codigo']}" if d['codigo'] else VALIDATION_URL
 
         W, H  = self.PREV_W, self.PREV_H
         DPI   = self.PREV_DPI
@@ -438,7 +440,7 @@ class EtiquetaApp:
                 return ImageFont.load_default()
 
         LOGO_SZ = round(1.15 * CPX)
-        QR_SZ   = LOGO_SZ
+        QR_SZ   = round(1.5 * CPX)
         LINE_PX = round(3.1 * MM_PX)
 
         # Logo
@@ -451,7 +453,7 @@ class EtiquetaApp:
                 pass
 
         # QR Code
-        qr_img = make_qr_pil(QR_SZ)
+        qr_img = make_qr_pil(QR_SZ, qr_url)
         if qr_img:
             img.paste(qr_img, (x0 + tw - QR_SZ, y0))
         else:
@@ -486,7 +488,7 @@ class EtiquetaApp:
                   font=f_code, fill=(0, 0, 0))
 
         # Linha divisória
-        div_y = y0 + LOGO_SZ + round(1.5 * MM_PX)
+        div_y = y0 + max(LOGO_SZ, QR_SZ) + round(1.5 * MM_PX)
         draw.line([(x0, div_y), (x0 + tw, div_y)], fill=(190, 190, 190), width=1)
 
         by = div_y + round(2.8 * MM_PX)
