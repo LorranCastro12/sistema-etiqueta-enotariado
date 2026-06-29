@@ -293,7 +293,7 @@ class EtiquetaApp:
 
         LOGO_SZ = 1.15 * cm
         QR_SZ   = 1.15 * cm
-        LINE_H  = 2.9 * mm
+        LINE_H  = 3.1 * mm
 
         # Logo (canto superior esquerdo da área útil)
         if self.logo_path:
@@ -326,7 +326,7 @@ class EtiquetaApp:
         c.drawString(title_x, y_top - 7.5 * mm, "CÓDIGO DE VALIDAÇÃO")
 
         # Valor do código
-        c.setFont("Helvetica", 6.5)
+        c.setFont("Helvetica", 9.5)
         c.drawString(title_x, y_top - 11.0 * mm, d['codigo'])
 
         # Linha divisória abaixo do cabeçalho
@@ -340,7 +340,7 @@ class EtiquetaApp:
         c.setFillColorRGB(0, 0, 0)
 
         # MNE do documento
-        c.setFont("Helvetica", 6.2)
+        c.setFont("Helvetica", 9.0)
         c.drawString(x0, by, f"MNE do documento: {d['mne']}")
         by -= LINE_H
 
@@ -361,35 +361,35 @@ class EtiquetaApp:
         avail_w = TEXT_W - 4.2 * mm - QR_SZ - 1 * mm
 
         full_line = f"CPF {d['cpf']} | {d['nome']} em {d['data']} {d['hora']}"
-        c.setFont("Helvetica", 6.2)
+        c.setFont("Helvetica", 9.0)
 
-        if c.stringWidth(full_line, "Helvetica", 6.2) <= avail_w:
+        if c.stringWidth(full_line, "Helvetica", 9.0) <= avail_w:
             c.drawString(txt_x, by, full_line)
             by -= LINE_H
         else:
             # Linha 1: CPF | Nome — reduz fonte se necessário
             line1 = f"CPF {d['cpf']} | {d['nome']}"
             line2 = f"em {d['data']} {d['hora']}"
-            fs = 6.2
+            fs = 9.0
             while c.stringWidth(line1, "Helvetica", fs) > avail_w and fs > 4.2:
                 fs -= 0.15
             c.setFont("Helvetica", fs)
             c.drawString(txt_x, by, line1)
             by -= LINE_H
-            c.setFont("Helvetica", 6.2)
+            c.setFont("Helvetica", 9.0)
             c.drawString(txt_x, by, line2)
             by -= LINE_H
 
         # "Para verificar as assinaturas..."
-        c.setFont("Helvetica", 5.5)
+        c.setFont("Helvetica", 6.5)
         c.drawString(x0, by,
                      "Para verificar as assinaturas leia o QR code acima ou acesse")
         by -= LINE_H * 0.88
 
         # URL sublinhada
         c.setFillColorRGB(0.0, 0.0, 0.7)
-        c.setFont("Helvetica", 5.5)
-        url_w = c.stringWidth(VALIDATION_URL, "Helvetica", 5.5)
+        c.setFont("Helvetica", 6.5)
+        url_w = c.stringWidth(VALIDATION_URL, "Helvetica", 6.5)
         c.drawString(x0, by, VALIDATION_URL)
         c.setStrokeColorRGB(0.0, 0.0, 0.7)
         c.setLineWidth(0.3)
@@ -439,7 +439,7 @@ class EtiquetaApp:
 
         LOGO_SZ = round(1.15 * CPX)
         QR_SZ   = LOGO_SZ
-        LINE_PX = round(2.9 * MM_PX)
+        LINE_PX = round(3.1 * MM_PX)
 
         # Logo
         if self.logo_path and os.path.exists(self.logo_path):
@@ -470,9 +470,9 @@ class EtiquetaApp:
 
         f_title = load_font(8,   bold=True)
         f_label = load_font(6.5, bold=True)
-        f_code  = load_font(6.5)
-        f_body  = load_font(6.2)
-        f_small = load_font(5.5)
+        f_code  = load_font(9.5)
+        f_body  = load_font(9.0)
+        f_small = load_font(6.5)
 
         pt_to_px = lambda pt: max(1, round(pt * DPI / 72))
 
@@ -500,7 +500,7 @@ class EtiquetaApp:
         by += LINE_PX
 
         # Check mark
-        ck_x, ck_y = x0 + 2, by + pt_to_px(6.2) // 2
+        ck_x, ck_y = x0 + 2, by + pt_to_px(9.0) // 2
         draw.line([(ck_x, ck_y), (ck_x + 4, ck_y + 5)], fill=(0, 0, 0), width=1)
         draw.line([(ck_x + 4, ck_y + 5), (ck_x + 11, ck_y - 3)], fill=(0, 0, 0), width=1)
 
@@ -517,7 +517,7 @@ class EtiquetaApp:
             line1 = f"CPF {d['cpf']} | {d['nome']}"
             line2 = f"em {d['data']} {d['hora']}"
             f_line1 = f_body
-            pt = 6.2
+            pt = 9.0
             while text_width_pil(draw, line1, f_line1) > avail_px and pt > 4.2:
                 pt -= 0.15
                 f_line1 = load_font(pt)
